@@ -23,6 +23,29 @@ func NewMaintenanceHandler(db *mongo.Database) *MaintenanceHandler {
 	return &MaintenanceHandler{db: db}
 }
 
+func (h *MaintenanceHandler) GetMaintenanceByID(c *gin.Context) {
+	noticeID := c.Param("id")
+	objID, err := primitive.ObjectIDFromHex(noticeID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid maintenance ID"})
+		return
+	}
+
+	collection := h.db.Collection("maintenance")
+	var maintenance models.MaintenanceRecord
+	err = collection.FindOne(context.Background(), bson.M{"_id": objID}).Decode(&maintenance)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Maintenance not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, maintenance)
+}
+
 func (h *MaintenanceHandler) GetMaintenanceRecords(c *gin.Context) {
 	userRole := c.GetString("user_role")
 	userID := c.GetString("user_id")

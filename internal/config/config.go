@@ -23,7 +23,7 @@ func Load() *Config {
 	cfg := &Config{
 		Port:        getEnv("PORT", "8080"),
 		DatabaseURL: getEnv("DATABASE_URL", "mongodb://localhost:27017/building_management_society"),
-		JWTSecret:   getEnv("JWT_SECRET", "building-management-society-secret-key-2024"),
+		JWTSecret:   getEnv("JWT_SECRET", "jwt-secret"),
 		Environment: getEnv("ENVIRONMENT", "development"),
 	}
 

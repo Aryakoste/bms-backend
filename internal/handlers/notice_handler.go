@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"bms-backend/internal/models"
 	"bms-backend/internal/middleware"
+	"bms-backend/internal/models"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -21,6 +21,29 @@ type NoticeHandler struct {
 
 func NewNoticeHandler(db *mongo.Database) *NoticeHandler {
 	return &NoticeHandler{db: db}
+}
+
+func (h *NoticeHandler) GetNoticeByID(c *gin.Context) {
+	noticeID := c.Param("id")
+	objID, err := primitive.ObjectIDFromHex(noticeID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid notice ID"})
+		return
+	}
+
+	collection := h.db.Collection("notices")
+	var notice models.Notice
+	err = collection.FindOne(context.Background(), bson.M{"_id": objID}).Decode(&notice)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Notice not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, notice)
 }
 
 func (h *NoticeHandler) GetNotices(c *gin.Context) {

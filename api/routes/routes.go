@@ -19,6 +19,7 @@ func InitializeRoutes(router *gin.Engine, db *mongo.Database) {
 	maintenanceHandler := handlers.NewMaintenanceHandler(db)
 	amenityHandler := handlers.NewAmenityHandler(db)
 	noticeHandler := handlers.NewNoticeHandler(db)
+	analyticsHandler := handlers.NewAnalyticsHandler(db)
 
 	// Health check
 	router.GET("/health", func(c *gin.Context) {
@@ -51,6 +52,11 @@ func InitializeRoutes(router *gin.Engine, db *mongo.Database) {
 	protected := api.Group("")
 	protected.Use(middleware.AuthMiddleware())
 	{
+		analytics := protected.Group("/analytics")
+		{
+			analytics.GET("/stats", analyticsHandler.GetStats)
+		}
+
 		// User routes
 		users := protected.Group("/users")
 		{
@@ -66,6 +72,7 @@ func InitializeRoutes(router *gin.Engine, db *mongo.Database) {
 			visitors.GET("", visitorHandler.GetVisitors)
 			visitors.POST("", middleware.RequireRole("resident"), visitorHandler.CreateVisitor)
 			visitors.GET("/pending", middleware.RequireRole("secretary", "security"), userHandler.GetPendingVisitors)
+			visitors.GET("/:id", middleware.RequireRole("resident", "secretary", "security"), visitorHandler.GetVisitorByID)
 			visitors.PUT("/:id/approve", middleware.RequireRole("secretary", "security"), visitorHandler.ApproveVisitor)
 			visitors.PUT("/:id/checkin", middleware.RequireRole("security"), visitorHandler.CheckInVisitor)
 			visitors.PUT("/:id/checkout", middleware.RequireRole("security"), visitorHandler.CheckOutVisitor)
@@ -75,6 +82,7 @@ func InitializeRoutes(router *gin.Engine, db *mongo.Database) {
 		maintenance := protected.Group("/maintenance")
 		{
 			maintenance.GET("", maintenanceHandler.GetMaintenanceRecords)
+			maintenance.GET("/:id", maintenanceHandler.GetMaintenanceByID)
 			maintenance.POST("", middleware.RequireRole("secretary"), maintenanceHandler.CreateMaintenanceRecord)
 			maintenance.POST("/pay", middleware.RequireRole("resident"), maintenanceHandler.PayMaintenance)
 		}
@@ -92,6 +100,7 @@ func InitializeRoutes(router *gin.Engine, db *mongo.Database) {
 		notices := protected.Group("/notices")
 		{
 			notices.GET("", noticeHandler.GetNotices)
+			notices.GET("/:id", noticeHandler.GetNoticeByID)
 			notices.POST("", middleware.RequireRole("secretary"), noticeHandler.CreateNotice)
 			notices.PUT("/:id", middleware.RequireRole("secretary"), noticeHandler.UpdateNotice)
 			notices.DELETE("/:id", middleware.RequireRole("secretary"), noticeHandler.DeleteNotice)

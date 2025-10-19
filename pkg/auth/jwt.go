@@ -10,9 +10,9 @@ import (
 
 type Claims struct {
 	UserID      primitive.ObjectID `json:"user_id"`
-	Email       string            `json:"email"`
-	Role        string            `json:"role"`
-	SocietyCode string            `json:"society_code"`
+	Email       string             `json:"email"`
+	Role        string             `json:"role"`
+	SocietyCode string             `json:"society_code"`
 	jwt.RegisteredClaims
 }
 

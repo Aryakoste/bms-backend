@@ -230,3 +230,26 @@ func (h *VisitorHandler) CheckOutVisitor(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Visitor checked out successfully"})
 }
+
+func (h *VisitorHandler) GetVisitorByID(c *gin.Context) {
+	visitorID := c.Param("id")
+	objID, err := primitive.ObjectIDFromHex(visitorID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid visitor ID"})
+		return
+	}
+
+	collection := h.db.Collection("visitors")
+	var visitor models.Visitor
+	err = collection.FindOne(context.Background(), bson.M{"_id": objID}).Decode(&visitor)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Visitor not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, visitor)
+}

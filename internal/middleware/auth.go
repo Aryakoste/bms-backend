@@ -1,11 +1,10 @@
 package middleware
 
 import (
-	"net/http"
-	"strings"
-
 	"bms-backend/internal/config"
 	"bms-backend/pkg/auth"
+	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -26,6 +25,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		}
 
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+		tokenString = strings.Trim(tokenString, `"`)
 		if tokenString == authHeader {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization header format"})
 			c.Abort()
